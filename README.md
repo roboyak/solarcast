@@ -135,6 +135,23 @@ Data Mining) process model:
 | Ablated Ridge (no POA, on-site temp/wind retained) | 21.41 | 0.885 | 35.3 % | Cost of losing the pyranometer |
 | Forecast-realistic Ridge (NWP-only) | 27.16 | 0.815 | 48.8 % | Cost of replacing every on-site sensor with NWP |
 
+#### Key visuals
+
+![Annual seasonality — calendar 2017](figures/annual_seasonality_2017.png)
+
+Daily AC power tracks measured POA across the year, and the AC / POA ratio
+stays stable, supporting the physical model behind the feature set.
+
+![POA irradiance vs AC power relationships](figures/poa_vs_power_relationships.png)
+
+Measured POA is the dominant predictor of AC power; module temperature adds
+a secondary thermal-derating signal.
+
+![First test week — three Ridge feature sets](figures/ridge_feature_set_comparison.png)
+
+Removing measured POA and then all on-site sensors shows the deployment cost:
+R² falls from 0.977 to 0.885 to 0.815.
+
 **Direct answer to the research question:**
 
 - **(a) Yes, supervised learning predicts hourly PV power well.** The full
@@ -217,6 +234,10 @@ lower bound (R² 0.815):
 ├── Solar_PV_Forecasting.ipynb             ← the analysis notebook
 ├── GLOSSARY.md                            ← plain-English vocabulary reference
 ├── requirements.txt                       ← pinned Python dependencies
+├── figures/                               ← rendered notebook visuals used in README
+│   ├── annual_seasonality_2017.png
+│   ├── poa_vs_power_relationships.png
+│   └── ridge_feature_set_comparison.png
 └── data/
     ├── SOURCES.md                         ← source URLs, licensing, and dataset notes
     ├── POA_IRRADIANCE_MEASUREMENT.md      ← POA sensor and measurement details
@@ -236,6 +257,9 @@ lower bound (R² 0.815):
   used in the notebook (pandas, numpy, scikit-learn, pvlib, openmeteo,
   matplotlib, seaborn, xarray). Run `pip install -r requirements.txt` to
   recreate the environment.
+- **`figures/`** — exported notebook visuals embedded in this README:
+  annual seasonality, POA/power relationships, and three-way Ridge feature
+  set comparison.
 - **`data/`** — input data files and supporting source notes:
   - `data/SOURCES.md`: canonical dataset/source URLs, licensing notes, and
     local file references for NREL PVDAQ and Open-Meteo.
