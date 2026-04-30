@@ -86,6 +86,8 @@ distributed PV change materially.
   Cached at `data/openmeteo_nist_4902_hourly.parquet`. Used as the
   NWP-equivalent feature set in the deployment-realistic Ridge.
 
+  https://open-meteo.com/en/docs/historical-weather-api
+
 #### Methodology
 
 The notebook follows the **CRISP-DM** (Cross-Industry Standard Process for
