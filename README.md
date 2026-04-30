@@ -36,7 +36,7 @@ pyranometer is treated here as a research direction, not a result.
 
 #### Rationale
 
-The question is technically interesting because PV power has a strong
+The three-part research question is technically interesting because PV power has a strong
 physical model — output ≈ irradiance × system efficiency × temperature
 derating — but irradiance and temperature are themselves stochastic
 outputs of weather. The empirical question is how much of that physical
@@ -216,6 +216,9 @@ lower bound (R² 0.815):
 ├── GLOSSARY.md                            ← plain-English vocabulary reference
 ├── requirements.txt                       ← pinned Python dependencies
 └── data/
+    ├── SOURCES.md                         ← source URLs, licensing, and dataset notes
+    ├── POA_IRRADIANCE_MEASUREMENT.md      ← POA sensor and measurement details
+    ├── POA_SENSOR_COSTS.md                ← irradiance sensor cost estimates
     ├── nist_ground_4902_15min.parquet     ← primary, 5.7 MB, 112,000 rows × 9 cols
     └── openmeteo_nist_4902_hourly.parquet ← secondary, 759 KB, 31,824 rows × 17 cols
 ```
@@ -231,7 +234,14 @@ lower bound (R² 0.815):
   used in the notebook (pandas, numpy, scikit-learn, pvlib, openmeteo,
   matplotlib, seaborn, xarray). Run `pip install -r requirements.txt` to
   recreate the environment.
-- **`data/`** — input data files:
+- **`data/`** — input data files and supporting source notes:
+  - `data/SOURCES.md`: canonical dataset/source URLs, licensing notes, and
+    local file references for NREL PVDAQ and Open-Meteo.
+  - `data/POA_IRRADIANCE_MEASUREMENT.md`: explanation of how
+    `poa_irradiance_wm2` is measured at NIST Ground-1 and why the sensor
+    redundancy matters for modeling.
+  - `data/POA_SENSOR_COSTS.md`: rough order-of-magnitude cost estimates for
+    the POA irradiance instrumentation discussed in research question (c).
   - `data/nist_ground_4902_15min.parquet` (5.7 MB): NREL PVDAQ 15-min
     AC / DC power, POA irradiance, on-site temperature sensors, wind,
     humidity (July 2014 → March 2018, 112,000 rows × 9 cols).
