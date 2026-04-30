@@ -1,0 +1,31 @@
+# Solar PV Forecasting Capstone — pinned environment
+# Recreate from scratch with:
+#     python -m venv .venv && source .venv/bin/activate
+#     pip install -r requirements.txt
+#
+# Versions match the toolchain printed in §1 of the v10.5 / v10.9 / v11 notebooks.
+
+# Core scientific stack
+numpy==2.4.4
+pandas==3.0.2
+pyarrow==24.0.0          # parquet I/O engine for pandas
+
+# Visualisation
+matplotlib==3.10.8
+seaborn==0.13.2
+
+# Modelling + statistics
+scikit-learn==1.8.0
+statsmodels==0.14.6      # seasonal_decompose, adfuller, plot_acf/plot_pacf
+
+# Solar / PV domain library
+pvlib==0.15.1            # solar position, AOI, clear-sky POA (Ineichen)
+
+# HTTP — used by scripts/fetch_openmeteo.py
+requests==2.33.1
+
+# Notebook environment
+jupyter==1.1.1
+notebook==7.5.5
+nbconvert==7.17.1
+ipykernel==7.2.0
