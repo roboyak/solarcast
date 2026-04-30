@@ -84,9 +84,15 @@ distributed PV change materially.
   DHI (global / direct-normal / diffuse horizontal irradiance), 2-m air
   temperature, 10-m wind speed, relative humidity, surface pressure.
   Cached at `data/openmeteo_nist_4902_hourly.parquet`. Used as the
-  NWP-equivalent feature set in the deployment-realistic Ridge.
+  NWP-equivalent feature set in the deployment-realistic Ridge. Open-Meteo
+  API data are offered under **CC BY 4.0**; attribution:
+  [weather data by Open-Meteo.com](https://open-meteo.com/). This project
+  caches the hourly data locally and forward-fills it onto the 15-min PVDAQ
+  index.
 
   https://open-meteo.com/en/docs/historical-weather-api
+  https://open-meteo.com/en/licence
+  https://creativecommons.org/licenses/by/4.0/
 
 #### Methodology
 

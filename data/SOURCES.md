@@ -37,4 +37,8 @@ Raw data reported at 15-minute increments in ISO 8601, partitioned by `system_id
 - **Local file:** `data/openmeteo_nist_4902_hourly.parquet`
 - **Cadence:** hourly, co-located to the NIST Ground-1 coordinates above
 - **Source:** Open-Meteo Historical Weather API — https://open-meteo.com/en/docs/historical-weather-api
-- **License:** CC BY 4.0 (attribution required)
+- **License:** CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+- **Attribution:** Weather data by Open-Meteo.com — https://open-meteo.com/
+- **Open-Meteo licence page:** https://open-meteo.com/en/licence
+- **Project modifications:** cached locally, renamed fields with an `om_`
+  prefix, and forward-filled hourly values onto the 15-min PVDAQ index.
