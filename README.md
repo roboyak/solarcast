@@ -44,13 +44,13 @@ structure a regularized linear model can recover, and how much skill
 survives when on-site sensor measurements are unavailable at forecast
 time.
 
-It also matters in practice. Solar PV output varies — clouds,
-temperature, wind, and the seasonal sun-angle drift push instantaneous
-power across a wide range. Forecast error has a non-linear cost:
-under-forecasts force emergency grid purchases at peak prices;
-over-forecasts waste battery capacity that could have absorbed the
-surplus. Any shiftable downstream load benefits from knowing the upcoming
-production profile.
+This matters in practice because solar PV output varies — clouds,
+temperature, wind, and seasonal sun-angle drift push instantaneous power
+across a wide range. Forecast error has a non-linear cost:
+under-forecasts can require grid purchases at peak prices; over-forecasts
+waste battery capacity that could have absorbed the surplus. Any
+shiftable downstream load benefits from knowing the upcoming production
+profile.
 
 Finally, the cost asymmetry behind question (c) is meaningful: a
 research-grade pyranometer stack runs several thousand dollars per site,
