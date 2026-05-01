@@ -173,19 +173,16 @@ R² falls from 0.977 to 0.885 to 0.815.
   to recover, but this initial submission does not include camera data or a
   cloud-tracking model.
 
-**Methodological findings (relevant to anyone building a deployed forecast):**
+**Methodological findings**
 
-- **Critical: never combine measured POA with NWP cloud cover in the same
-  model.** Measured POA already encodes cloud attenuation; NWP cloud cover
-  becomes a redundant, noisier copy. The model backtests well and
-  breaks at deployment — the pyranometer signal is gone at forecast time,
-  and the cloud-cover coefficient was never essential to the fitted model.
-  Pick **either**
-  measured POA (nowcast, ≤ 15-min) **or** NWP cloud cover (forecast,
-  hour-ahead+) — never both.
-- **No target leakage in the baseline.** No DC power (it's the AC target
-  scaled by ~0.95), no lag/rolling features built from the target itself.
-  Solar-geometry features are deterministic from timestamp + site coords.
+- **Separate nowcast and forecast feature sets.** Do not combine measured POA
+  with NWP cloud cover in the same model. Measured POA already contains the
+  realized cloud-attenuation signal; NWP cloud cover belongs in the
+  forecast-realistic model where measured irradiance is unavailable.
+- **Protect against target leakage.** The baseline excludes DC power and any
+  lag/rolling features derived from AC power. Solar geometry and cyclical time
+  features are deterministic from timestamp and site metadata, so they are
+  available at prediction time.
 
 **Limitations**
 
