@@ -192,6 +192,13 @@ properties (mean, variance, autocorrelation) do not change over time.
 SARIMAX requires stationarity, which is achieved here via lag-24
 seasonal differencing (§6.6).
 
+**Stochastic** — Random / probabilistic — governed by a probability
+distribution rather than fully determined by inputs. Cloud cover, wind,
+and short-term temperature swings are stochastic outputs of weather, so
+the irradiance and panel temperature that drive PV power inherit that
+randomness. Used in the README rationale to motivate why a *regularized*
+linear model is needed at all.
+
 **Trend** — The slow-varying component of a time series — in §6.2,
 the multi-day weather regime that remains after removing the daily cycle.
 
@@ -283,6 +290,13 @@ Planned for follow-on work as the expected top performer.
 historical weather computed by re-running NWP models with all observations
 that were available after the fact. Higher quality than real-time forecast,
 since it's hindsight. Used by Open-Meteo to power its historical API.
+
+**Forecast skill (or just "skill")** — Predictive accuracy of a model,
+typically expressed relative to a reference baseline (persistence,
+climatology, or — in this report — the variance ceiling of the full Ridge
+nowcast). When the README rationale says "how much skill survives," it
+means how much R² remains when on-site sensors are replaced with ERA5/NWP
+proxies; the §9 → §9.2 drop from R² 0.977 → 0.815 quantifies the loss.
 
 **HRRR — High-Resolution Rapid Refresh** — NOAA's 3 km operational NWP
 model over CONUS, updated hourly. Mentioned in §12 as a follow-on
