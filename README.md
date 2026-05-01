@@ -6,25 +6,27 @@
 
 This study addresses a **three-part research question** (full statement
 in the Research Questions section below) using a Ridge-regression
-baseline on four years of real 15-minute production from NREL (National
+baseline on 3.6 years (44 months) of real 15-minute production from NREL (National
 Renewable Energy Laboratory) PVDAQ (Photovoltaic Data Acquisition)
 System 4902 (NIST Ground-1, Gaithersburg MD), paired with hourly
-Open-Meteo / ERA5 (ECMWF Reanalysis v5) reanalysis weather as the
-NWP-equivalent feature set for the deployment-realistic configuration.
+Open-Meteo / ERA5 (ECMWF Reanalysis v5) reanalysis weather as an
+NWP-equivalent offline proxy for the no-on-site-sensor configuration.
 
-**Part (a) — predictive accuracy.** Full Ridge nowcast with every
+**Part (a) — predictive accuracy.** Full Ridge 15-minute nowcast with every
 on-site sensor: R² (coefficient of determination) = 0.977, RMSE
-(root-mean-squared error) = 9.6 kW. Deployment-realistic Ridge using
-only NWP (Numerical Weather Prediction) inputs — no on-site
-sensors at all: R² = 0.815, RMSE = 27.2 kW. The full configuration
-clears the problem-statement target of R² ≥ 0.85; the deployment
-configuration is just below it.
+(root-mean-squared error) = 9.6 kW. Reanalysis-proxy Ridge using only
+ERA5-derived weather inputs — no on-site sensors at all: R² = 0.815,
+RMSE = 27.2 kW. The full configuration clears the problem-statement
+target of R² ≥ 0.85; the ERA5 proxy is just below it and should be read
+as an optimistic offline estimate until validated with operational
+forecasts.
 
 **Part (b) — feature ranking by ablation:** POA (plane-of-array)
-irradiance (R² 0.977 → 0.885) > on-site temperature (0.885 → 0.815) >
-solar geometry / cyclical time (always-available context) > on-site
-wind ≈ NWP wind. Practical takeaway: a basic on-site weather station
-materially outperforms NWP alone.
+irradiance (R² 0.977 → 0.885) > on-site temperature/wind
+(0.885 → 0.815 when replaced by ERA5 proxies) > solar geometry /
+cyclical time (always-available context). Practical takeaway: a basic
+on-site weather station materially outperforms reanalysis/NWP proxy
+fields alone.
 
 **Part (c) — vision-based replacement (extra credit, exploratory).**
 The Part (b) ranking shows POA irradiance is the highest-value on-site
@@ -42,7 +44,10 @@ derating — but irradiance and temperature are themselves stochastic
 outputs of weather. The empirical question is how much of that physical
 structure a regularized linear model can recover, and how much skill
 survives when on-site sensor measurements are unavailable at forecast
-time.
+time. Ridge is the chosen baseline because L2 handles the heavy
+collinearity among POA, module temperature, AOI, and clear-sky index
+while keeping coefficients interpretable as a bar any non-linear
+follow-on model must beat.
 
 This matters in practice because solar PV output varies — clouds,
 temperature, wind, and seasonal sun-angle drift push instantaneous power
@@ -67,6 +72,12 @@ distributed PV change materially.
 > replaced with vision-based systems that measure cloud-cover density,
 > speed, and direction?*
 
+**Implementation note.** The assignment question uses "hourly"; this repo
+keeps the PVDAQ target at its native 15-minute cadence and forward-fills
+hourly Open-Meteo fields onto that index. Metrics below are therefore
+15-minute nowcast / offline-proxy metrics, not hourly-resampled forecast
+metrics.
+
 #### Data Sources
 
 - **Primary — NREL PVDAQ System 4902** (NIST Ground-1, Gaithersburg MD).
@@ -84,7 +95,7 @@ distributed PV change materially.
   DHI (global / direct-normal / diffuse horizontal irradiance), 2-m air
   temperature, 10-m wind speed, relative humidity, surface pressure.
   Cached at `data/openmeteo_nist_4902_hourly.parquet`. Used as the
-  NWP-equivalent feature set in the deployment-realistic Ridge. Open-Meteo
+  NWP-equivalent feature set in the ERA5 reanalysis-proxy Ridge. Open-Meteo
   API data are offered under **CC BY 4.0**; attribution:
   [weather data by Open-Meteo.com](https://open-meteo.com/). This project
   caches the hourly data locally and forward-fills it onto the 15-min PVDAQ
@@ -102,9 +113,10 @@ Data Mining) process model:
 1. **Data Understanding** — load both datasets; describe shape, dtypes, and
    summary statistics; sanity-check ranges and coverage.
 
-2. **Data Preparation** — clean missing values (split-aware time
-   interpolation), detect and clip physical-bound violations, average
-   redundant sensor pairs, merge Open-Meteo onto the 15-min PVDAQ index by
+2. **Data Preparation** — clean missing values with train/test-aware rules
+   (the test segment uses only prior test values plus train-derived
+   fallbacks), detect and clip physical-bound violations, average redundant
+   sensor pairs, merge Open-Meteo onto the 15-min PVDAQ index by
    forward-fill.
 
 3. **Feature engineering** — pvlib solar geometry (AOI, clear-sky POA,
@@ -119,8 +131,9 @@ Data Mining) process model:
    - **Full Ridge** — every on-site sensor, including measured POA, at time *t*.
    - **Ablated Ridge** — drops the three POA-derived features but keeps
      on-site temperature and wind.
-   - **Forecast-realistic Ridge** — drops every on-site PVDAQ measurement
-     and substitutes the 11 Open-Meteo NWP-equivalent fields.
+   - **ERA5 reanalysis-proxy Ridge** — drops every on-site PVDAQ
+     measurement and substitutes the 11 Open-Meteo reanalysis fields used
+     as NWP-equivalent proxies.
 
 5. **Evaluation** — four metrics on the held-out chronological test set:
    | Metric | Units | Why this metric |
@@ -139,7 +152,7 @@ Data Mining) process model:
 |---|---:|---:|---:|---|
 | Full Ridge (all on-site sensors, including POA) | **9.64** | **0.977** | 12.9 % | Variance ceiling for weather-only models |
 | Ablated Ridge (no POA, on-site temp/wind retained) | 21.41 | 0.885 | 35.3 % | Cost of losing the pyranometer |
-| Forecast-realistic Ridge (NWP-only) | 27.16 | 0.815 | 48.8 % | Cost of replacing every on-site sensor with NWP |
+| ERA5 reanalysis-proxy Ridge (no on-site sensors) | 27.16 | 0.815 | 48.8 % | Offline proxy for replacing every on-site sensor with weather fields |
 
 #### Key visuals
 
@@ -155,19 +168,23 @@ a secondary thermal-derating signal.
 
 ![First test week — three Ridge feature sets](figures/ridge_feature_set_comparison.png)
 
-Removing measured POA and then all on-site sensors shows the deployment cost:
+Removing measured POA and then all on-site sensors shows the offline proxy cost:
 R² falls from 0.977 to 0.885 to 0.815.
 
 **Direct answer to the research question:**
 
-- **(a) Yes, supervised learning predicts hourly PV power well.** The full
-  Ridge explains 97.7 % of variance — linear regression alone recovers
-  most of the structure, without resorting to non-linear models.
-- **(b) Features ranked by importance:** POA irradiance (single most
-  highest-impact) → on-site temperature (panel + ambient) → solar geometry
-  and cyclical time (always-available context) → on-site wind ≈ NWP
-  wind. POA × module-temperature interaction captures the thermal-derating
-  signal Ridge would otherwise miss.
+- **(a) Yes, supervised learning predicts native 15-minute PV power well.**
+  The full Ridge explains 97.7 % of variance — linear regression alone
+  recovers most of the structure, without resorting to non-linear models.
+- **(b) Features ranked by importance:** measured POA is by far the most
+  impactful (R² 0.977 → 0.885 when removed). Replacing the remaining on-site
+  sensors with ERA5 reanalysis proxies costs another 0.070 R² (0.885 →
+  0.815), driven mainly by the missing module-temperature channel; ERA5's
+  10-m wind also correlates only r ≈ 0.75 with on-site wind (vs r ≈ 0.99
+  for temperature), so it is a noisier substitute rather than an equivalent.
+  Solar geometry and cyclical time are always-available context. The POA ×
+  module-temperature interaction captures the thermal-derating signal Ridge
+  would otherwise miss.
 - **(c) Vision-based replacement remains a research direction.** The
   ablation identifies POA as the target signal a camera system would need
   to recover, but this initial submission does not include camera data or a
@@ -177,8 +194,9 @@ R² falls from 0.977 to 0.885 to 0.815.
 
 - **Separate nowcast and forecast feature sets.** Do not combine measured POA
   with NWP cloud cover in the same model. Measured POA already contains the
-  realized cloud-attenuation signal; NWP cloud cover belongs in the
-  forecast-realistic model where measured irradiance is unavailable.
+  realized cloud-attenuation signal; forecast or reanalysis cloud cover
+  belongs in the no-measured-irradiance model where measured POA is
+  unavailable.
 - **Protect against target leakage.** The baseline excludes DC power and any
   lag/rolling features derived from AC power. Solar geometry and cyclical time
   features are deterministic from timestamp and site metadata, so they are
@@ -201,8 +219,8 @@ R² falls from 0.977 to 0.885 to 0.815.
 #### Next steps
 
 Building on the Ridge baseline answers, follow-on work targets the gap
-between the full nowcast (R² 0.977) and the forecast-realistic deployment
-lower bound (R² 0.815):
+between the full nowcast (R² 0.977) and the ERA5 reanalysis-proxy result
+(R² 0.815):
 
 - Replace ERA5 reanalysis with operational NWP — NSRDB (National Solar
   Radiation Database) PSM4 (Physical Solar Model v4) or NOAA's HRRR
@@ -210,7 +228,7 @@ lower bound (R² 0.815):
   *forecast skill*, not reanalysis truth.
 - H-step forecasting at H = 1 h, 6 h, 24 h with expanding-window
   time-series cross-validation.
-- Model comparison on the forecast-realistic feature set: SARIMAX (seasonal
+- Model comparison on the no-on-site-sensor feature set: SARIMAX (seasonal
   ARIMA with exogenous regressors), XGBoost (gradient-boosted trees) with
   SHAP (Shapley additive explanations) feature attribution, LSTM (long
   short-term memory recurrent network), and a Lasso baseline. Trees and LSTM
@@ -226,7 +244,7 @@ lower bound (R² 0.815):
 - **Vision-based irradiance proxy (research question c).** Mount a fixed
   sky camera at the site, train a cloud-cover / cloud-motion model from
   the image stream, and benchmark it as a drop-in substitute for the
-  pyranometer in the forecast-realistic Ridge. Targets the $6K–$7K-per-site
+  pyranometer in the no-on-site-sensor Ridge. Targets the $6K–$7K-per-site
   instrumentation cost.
 
 #### Outline of project
@@ -234,9 +252,16 @@ lower bound (R² 0.815):
 ```
 .
 ├── README.md                              ← this file
+├── HOW-TO.md                              ← short setup and reproduction guide
 ├── Solar_PV_Forecasting.ipynb             ← the analysis notebook
 ├── GLOSSARY.md                            ← plain-English vocabulary reference
 ├── requirements.txt                       ← pinned Python dependencies
+├── .env.example                           ← optional API-key template for fetch scripts
+├── scripts/
+│   ├── reproduce.py                       ← simple smoke/notebook/fetch command runner
+│   ├── fetch_openmeteo.py                 ← rebuild Open-Meteo ERA5 parquet cache
+│   ├── fetch_nsrdb.py                     ← optional NSRDB/PSM4 operational-weather fetch
+│   └── smoke_check.py                     ← fast data + modeling smoke test
 ├── figures/                               ← rendered notebook visuals used in README
 │   ├── annual_seasonality_2017.png
 │   ├── poa_vs_power_relationships.png
@@ -257,9 +282,14 @@ lower bound (R² 0.815):
   vocabulary used throughout the notebook (POA, AOI, NWP, ERA5, clear-sky
   index, Ridge, RMSE / R² / MAPE, etc.).
 - [requirements.txt](requirements.txt) — pinned Python package versions
-  used in the notebook (pandas, numpy, scikit-learn, pvlib, openmeteo,
-  matplotlib, seaborn, xarray). Run `pip install -r requirements.txt` to
+  used in the notebook (pandas, numpy, scikit-learn, pvlib, statsmodels,
+  matplotlib, seaborn, requests, Jupyter/nbconvert). Run `pip install -r requirements.txt` to
   recreate the environment.
+- [HOW-TO.md](HOW-TO.md) — shortest path for setup, smoke checking, full
+  notebook execution, and optional data-cache rebuilds.
+- **`scripts/`** — reproducibility helpers for rebuilding the weather cache,
+  fetching optional NSRDB/PSM4 data, and running a fast smoke check without
+  executing the full notebook.
 - **`figures/`** — exported notebook visuals embedded in this README:
   annual seasonality, POA/power relationships, and three-way Ridge feature
   set comparison.
@@ -272,8 +302,8 @@ lower bound (R² 0.815):
   - `data/POA_SENSOR_COSTS.md`: rough order-of-magnitude cost estimates for
     the POA irradiance instrumentation discussed in research question (c).
   - `data/nist_ground_4902_15min.parquet` (5.7 MB): NREL PVDAQ 15-min
-    AC / DC power, POA irradiance, on-site temperature sensors, wind,
-    humidity (July 2014 → March 2018, 112,000 rows × 9 cols).
+    AC / DC power, POA irradiance, on-site temperature sensors, and wind
+    (July 2014 → March 2018, 112,000 rows × 9 cols).
   - `data/openmeteo_nist_4902_hourly.parquet` (759 KB): 31,824 rows ×
     17 cols of ERA5 reanalysis features (hourly) matched to the NREL index.
   Both are pre-cleaned and ready to use.
@@ -286,7 +316,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-jupyter nbconvert --to notebook --execute --inplace Solar_PV_Forecasting.ipynb
+python scripts/reproduce.py smoke
+python scripts/reproduce.py notebook
 # or open Solar_PV_Forecasting.ipynb in JupyterLab and Run All.
 ```
 
